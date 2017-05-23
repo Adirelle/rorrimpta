@@ -1,0 +1,26 @@
+- *-kfreebsd*
+
+### Releases
++ /jessie*/
++ /stretch*/
++ /testing*
++ /stable*
+- /*
+
+### Do not want the installers, the sources, nor the hashes
+- installer-*/
+- *-installer/
+- source/
+- by-hash/
+
+### Architectures
+- *-udeb-*
++ *-amd64*
+- Contents-*
+- Components-*
+- binary-*
+
+### Translations
++ Translation-fr*
+- Translation-*
+

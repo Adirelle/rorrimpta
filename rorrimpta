@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+set -ex
+
+RSYNC_OPTS="-av --stats --no-motd"
+
+DEST=$1
+MIRROR=$(cat $DEST/.mirror)
+
+ARCHIVES=$DEST/archives
+
+[[ -d $ARCHIVES ]] || mkdir $ARCHIVES
+
+if [[ -e $DEST/running ]]; then
+    RUNNING=$(readlink -f $DEST/running)
+else
+    RUNNING=$ARCHIVES/$(date +%Y%m%d-%H%M)
+    mkdir -p $RUNNING/dists
+fi
+ln -snfr $RUNNING $DEST/running
+
+for NAME in $(ls -1 $ARCHIVES); do
+    DIR=$ARCHIVES/$NAME
+    if [[ ! $DIR -ef $RUNNING ]]; then
+        RSYNC_OPTS="$RSYNC_OPTS --link-dest=$DIR"
+    fi
+done
+
+rsync $RSYNC_OPTS --include-from=$DEST/.filter $MIRROR/dists/ $RUNNING/dists/
+
+find $RUNNING/dists/ -name "Packages.gz" | xargs zcat | awk '/^Filename:/{print $2}' >$RUNNING/.files
+
+rsync $RSYNC_OPTS --files-from=$RUNNING/.files $MIRROR $RUNNING
+
+ln -snfr $RUNNING $DEST/current
+rm $DEST/running
+
